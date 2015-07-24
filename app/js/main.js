@@ -1,35 +1,28 @@
 "use strict";
 
-import snabbdom from 'snabbdom';
 import h from 'snabbdom/h';
+import updateDOM from './updateDOM';
 
-const patch = snabbdom.init([
-  require('snabbdom/modules/class'),          // makes it easy to toggle classes
-  require('snabbdom/modules/props'),          // for setting properties on DOM elements
-  require('snabbdom/modules/style'),          // handles styling on elements with support for animations
-  require('snabbdom/modules/eventlisteners'), // attaches event listeners
-]);
-
-
-function view(name) { 
+function view(state, handler) { 
   return h('div', [
     h('input', {
       props: { type: 'text', placeholder: 'Type a your name' },
-      on   : { input: onInput }
+      on   : { input: e => handler(state, e) }
     }),
-    h('hr'),
-    h('div', 'Hello ' + name)
+    h('div', 'Hello ' + state.name)
   ]); 
 }
 
-function onInput(event) {
-  const newVnode = view(event.target.value);
+function handler(state, event) {
+  return { name: event.target.value };
+}
+
+
+function viewHandler(state, event) {
+  const newState = handler(state, event);
+  const newVnode = view(newState, viewHandler);
   updateDOM(newVnode);  
 }
 
-var oldVnode = document.getElementById('placeholder');
-function updateDOM(newVnode) {
-  oldVnode = patch(oldVnode, newVnode);
-}
-
-updateDOM(view(''));
+const vnode = view({name: ''}, viewHandler);
+updateDOM(vnode);  
